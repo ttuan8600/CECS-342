@@ -7,13 +7,15 @@ struct Block {
     struct Block* next_block;
 };
 
-const OVERHEAD_SIZE = sizeof(struct Block);  // refers to size & pointer of a block
-const POINTER_SIZE = sizeof(void*);
+const size_t OVERHEAD_SIZE = sizeof(struct Block);
+const size_t POINTER_SIZE = sizeof(void*);
 struct Block* free_head;
 
 void my_initialize_heap(int size) {
+    // Create a pointer to the heap and assign it to the free_head.
     free_head = (struct Block*)malloc(size);
-    free_head->block_size = size - OVERHEAD_SIZE;
+    // Assign the block's size and next_block.
+    free_head->block_size = size - OVERHEAD_SIZE - POINTER_SIZE;
     free_head->next_block = NULL;
 }
 
@@ -30,6 +32,7 @@ void* my_alloc(int size) {
     struct Block* curr = free_head;
     struct Block* prev = 0;
     bool found = false;
+
     // Iterare through each node, if a node has equal or more space than necessary to hold size, use that node.
     while(curr != NULL) {
         if (curr->block_size >= size) {
@@ -67,16 +70,13 @@ void* my_alloc(int size) {
     }
     // Return a pointer to the allocated data, if possible
     if (found) {
-        return (void*)(curr + 1);
+        return (void*)curr + OVERHEAD_SIZE;
     }
-    // Otherwise, return NULL.
-    else {
-        return NULL;
-    }
+    return 0;      
 }
 
 void my_free(void* data) {
-    struct Block* freed_block = (struct Block*)((void*)data - OVERHEAD_SIZE);
+    struct Block* freed_block = (struct Block*)((char*)data - sizeof(struct Block));
     freed_block->next_block = free_head;
     free_head = freed_block;
 }

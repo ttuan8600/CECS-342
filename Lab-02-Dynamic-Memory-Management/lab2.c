@@ -13,111 +13,104 @@ struct Block {
     struct Block* next_block;
 };
 
-const size_t OVERHEAD_SIZE = sizeof(struct Block);
-const size_t POINTER_SIZE = sizeof(void*);
+const OVERHEAD_SIZE = sizeof(struct Block);
+const POINTER_SIZE = sizeof(void*);
 struct Block* free_head;
 
 void my_initialize_heap(int size) {
-  free_head = (struct Block*) malloc(size);
-  free_head -> block_size = size - OVERHEAD_SIZE;
-  free_head -> next_block = 0;
-    // Create a pointer to the heap and assign it to the free_head.
-    //free_head = (struct Block*)malloc(size);
-    // Assign the block's size and next_block.
-    //free_head->block_size = size - OVERHEAD_SIZE;
-    //free_head->next_block = NULL;
+  if (size <= 0){
+    printf("Error: Size must be greater than 0.");
+    return;
+  }
+  // Create a pointer to the heap and assign it to the free_head.
+  free_head = (struct Block*)malloc(size);
+  if (free_head == NULL){
+    printf("Error: Malloc failed.");
+    return;
+  }
+  // Assign the block's size and next_block.
+  free_head->block_size = size - OVERHEAD_SIZE;
+  free_head->next_block = NULL;
 }
 
 void* my_alloc(int size)
 {
-	//First, the data size must be a multiple of (void*) size
-	//Take the ceiling of the data size / (void*) size
-	//to know which multiple of (void*) to use
-	double dblSizeAsMultiple = ((double)size / (double)size);
+  //Check if size is valid
+  if (size <= 0){
+    printf("Error: Size must be greater than 0.");
+    return NULL;
+  }
 
-	//Calculate the number of bytes to allocate for
-	//the requested size and cast to integer
-	int sizeAsMultiple = (int)(dblSizeAsMultiple * POINTER_SIZE);
-
+  //Ensure size is a multiple of POINTER_SIZE
+  size = (size + POINTER_SIZE - 1) / POINTER_SIZE * POINTER_SIZE;
 
 	//Iterate through free list
 	//First initialize pointers
 	struct Block *curr = free_head;
 	struct Block *prev = 0;
+  ;
   bool found = false;
-  void* ptr;
+
   // Iterare through each node, if a node has equal or more space than necessary to hold size, use that node.
-	while (curr)
+	while (curr != NULL)
 	{
 		//If this block fits the size we want to allocate
-		//(Uses the first fit heuristic)
-		if (curr->block_size >= sizeAsMultiple)
-		{
+		//(Uses the first fit heuristic)
+		if (curr->block_size >= size){
       found = true;
       // Determine if the current block can be split.
-			int excessSpace = curr->block_size - sizeAsMultiple;
-
-			//if splittable
-			if (excessSpace >= (OVERHEAD_SIZE + POINTER_SIZE))
+			// if splittable
+			if (curr->block_size > size + OVERHEAD_SIZE)
 			{
-					// Create a pointer to the newly split block's position then assign its structure members.
-          // Update Curr's block size as a result of splitting.
-					curr->block_size = sizeAsMultiple;
+        // Create a pointer to the newly split block's position then assign its structure members.
+        struct Block *split_block = (struct Block *)((char*)curr + OVERHEAD_SIZE + size);
+        split_block->block_size = curr->block_size - size - OVERHEAD_SIZE;
+        split_block->next_block = curr->next_block;
 
-					// Adjust the double linked list, depending on whether curr is the head or not.
-					struct Block *new_split_block = (struct Block *)((char*)curr + OVERHEAD_SIZE + sizeAsMultiple);
-					new_split_block->block_size = excessSpace;
-
-					//Initialize data pointer
-					ptr = ((char*)new_split_block + OVERHEAD_SIZE);
-
-					//Link the new (split) block into the free list
-					//by making the new block the head of the free list 
-					//and linking its next pointer to what used to be 
-					//the head of the list.
-					if (curr == free_head)
-					{
-						//new_split_block->next_block = currBlock->next_block;
-						//currBlock->next_block = new_split_block;
-						free_head = new_split_block;
-					}
-					else
-					{
-            // Not splittable If curr is the head, curr's next block is the new head.
-						new_split_block->next_block = curr->next_block;
-						prev->next_block = new_split_block;
-					}
+        // Update Curr's block size as a result of splitting.
+        curr->block_size = size;
+        if (curr == free_head)
+        {
+          // If curr is the head, the split_block is the new head.
+          free_head = split_block;
+        }
+        else
+        {
+          // If curr is not the head, the previous block points to the split_block.
+          prev->next_block = split_block;
+        }
 			}
-			else
-			{
-					//If curr is not the head, the previous block points to curr's next block.
-					if (curr == free_head)
-					{
-						free_head = curr->next_block;
-					}
-					else
-					{
-            // Haven't found an available space yet.
-						prev->next_block = curr->next_block;
-					}
-					curr->next_block = 0;
+      //Not splittable
+			else{
+				//If curr is not the head, curr's next_block is the new head.
+				if (curr == free_head){
+					free_head = curr->next_block;
+				}else{
+          //If curr is not the head, the previous block points to curr's next_block.
+					prev->next_block = curr->next_block;
+				}
 			}
-
-			//Initialize data pointer
-			ptr = ((char*)curr + OVERHEAD_SIZE);
-
-			// Return a pointer to the allocated data, if possible.
-			return ptr;
-		}
+      //Since we found a block, no need to keep searching.
+      break;
+		}else{
+      //Haven't found available space yet
+      prev = curr;
+      curr = curr->next_block;
+    }
 	}
+  //REturn a pointer to the allocated data, if possible.
+  if (found){
+    return (void*)((char*)curr + OVERHEAD_SIZE);
+  }else{
+    return NULL;
+  }
 }
-
 
 // I think this part is correct so far, despite there is segment fault at line 83 while doing option 3
 void my_free(void* data) {
-    struct Block * freed_block = (struct Block *)((char*)data - OVERHEAD_SIZE);
-    freed_block->next_block = free_head;
-    free_head = freed_block;
+  struct Block* freed_block = (struct Block*)((char*)data - OVERHEAD_SIZE);
+  freed_block->next_block = free_head;
+  free_head = freed_block;
 }
 
 void menuOptionOne() {
@@ -141,10 +134,10 @@ void menuOptionTwo() {
   printf("Address B - Address A: %d bytes \n", (int)numTwo - (int)numOne);
 };
 
-//Allocate three ints and print their addresses, then free the second of 
-//double values and print its address (to allocate an array in C, allocate 
-//that the address is correct. Allocate another int and print its address; 
-//same as the int that you freed.
+// Allocate three ints and print their addresses, then free the second of 
+// double values and print its address (to allocate an array in C, allocate 
+// that the address is correct. Allocate another int and print its address; 
+// same as the int that you freed.
 void menuOptionThree() {
   int *numOne = my_alloc(sizeof(int));
   printf("Address of int A: %p\n", numOne);
@@ -159,6 +152,7 @@ void menuOptionThree() {
   int *numFour = my_alloc(sizeof(int));
   printf("Address of int D (should be the int B): %p\n", numFour);
 };
+
 //Allocate one char, then allocate one int, and print their addresses. They should be exactly the same
 //distance apart as in test #2.
 void menuOptionFour() {
@@ -169,7 +163,10 @@ void menuOptionFour() {
   printf("Address of int B: %p\n", numTwo);
   int overheadPlusLarger = OVERHEAD_SIZE + sizeof(void*);
   printf("Size of overhead + larger of (the size of an integer; the minimum block size): %d\n", overheadPlusLarger);
+  printf("Address B - Address A: %d bytes \n", (int)numTwo - (int)charOne);
+
 };
+
 //Allocate space for a 80-element int array, then for one more int value. 
 //the int value is 80 * sizeof(int) + the size of your header after the 
 //Verify that the int's address and value has not changed.
@@ -186,6 +183,7 @@ void menuOptionFive() {
   printf("Address of int value: %p\n", numOne);
   printf("Value of int A: %d\n", *numOne);
 }
+
 //Testing case
 int main() {
   int menuChoice = 0;

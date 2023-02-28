@@ -163,8 +163,6 @@ void menuOptionFour() {
   printf("Address of int B: %p\n", numTwo);
   int overheadPlusLarger = OVERHEAD_SIZE + sizeof(void*);
   printf("Size of overhead + larger of (the size of an integer; the minimum block size): %d\n", overheadPlusLarger);
-  printf("Address B - Address A: %d bytes \n", (int)numTwo - (int)charOne);
-
 };
 
 //Allocate space for a 80-element int array, then for one more int value. 

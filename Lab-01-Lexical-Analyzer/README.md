@@ -6,7 +6,7 @@ This includes the source code and output for the Lab1-Lexical Analyzer
 
 To run this code using the following command:
 
-```ruby
+```shell
 ~$ gcc lab1.c -o lab1
 ~$ ./lab1
 ```

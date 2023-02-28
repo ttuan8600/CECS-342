@@ -4,8 +4,12 @@ This includes the source code and output for the Lab1-Lexical Analyzer
 
 ## Instruction
 
-1. Use the command `gcc lab1_TT.c -o lab1` to compile the code.
-2. Run the code using this command `./lab1`.
+To run this code using the following command:
+
+```ruby
+~$ gcc lab1.c -o lab1
+~$ ./lab1
+```
 
 ## Contributor
 

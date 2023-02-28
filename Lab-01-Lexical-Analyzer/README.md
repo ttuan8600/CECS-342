@@ -10,5 +10,7 @@ This includes the source code and output for the Lab1-Lexical Analyzer
 ## Contributor
 
 Twan Tran
+
 Pornthep Bootchot
+
 Gavin Lampton

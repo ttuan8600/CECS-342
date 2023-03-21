@@ -10,6 +10,7 @@ To run this code using the following command:
 ~$ gcc lab1.c -o lab1
 ~$ ./lab1
 ```
+Notice: make sure you have a front.txt file as your test file.
 
 ## Contributor
 

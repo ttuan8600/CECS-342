@@ -1,7 +1,7 @@
 /*
-Twan Tran 029136612
-Gavin Lampton 026357147
-Pornthep Bootchot 027817775
+Twan Tran @029136612
+Gavin Lampton @026357147
+Pornthep Bootchot @027817775
 */
 
 /* A lexical analyzer system for simple
